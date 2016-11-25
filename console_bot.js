@@ -56,7 +56,16 @@ This bot demonstrates many of the core features of Botkit:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+// DEV ONLY !!!!!!!!! - handle this 
+var X-StorageApi-Token = '1809-63696-37dd593d9add855e4109bb95e364524d8b5185a2'
+
 var Botkit = require('./lib/Botkit.js');
+
+// Other dependancies specific for Kubicoola
+var dataframe= require('dataframe-js');
+var http = require('http'); 
+
+// 
 var os = require('os');
 
 var controller = Botkit.consolebot({
@@ -217,3 +226,43 @@ function formatUptime(uptime) {
     uptime = uptime + ' ' + unit;
     return uptime;
 }
+
+controller.hears(["jobs"], ["mention", "direct_mention", "direct_message"], function(bot,message){
+	
+	//var txt = message.text;
+	//txt = txt.toLowerCase().replace('call ','');
+	//var city = txt.split(',')[0].trim().replace(' ','_');
+	//var state = txt.split(',')[1].trim();
+
+	//console.log(city + ', ' + state);
+	//var url = '/api/' + key + '/forecast/q/state/city.json'
+    //url = url.replace('state', state);
+	//url = url.replace('city', city);
+
+    var ulr = '/v2/storage/tokens/verify'
+
+	http.get({
+		host: 'connection.keboola.com',
+		path: url
+        headers: {
+           "X-StorageAPI-Token" = X-StorageApi-Token
+        }
+	}, function(response){
+		var body = '';
+		response.on('data',function(d){
+			body += d;
+		})
+		response.on('end', function(){
+			var data = JSON.parse(body);
+			var days = data.forecast.simpleforecast.forecastday;
+			for(i = 0;i<days.length;i++)
+			{
+				bot.reply(message, days[i].date.weekday + 
+					' high: ' + days[i].high.fahrenheit + 
+					' low: ' + days[i].low.fahrenheit + 
+					' condition: ' + days[i].conditions);
+				bot.reply(message, days[i].icon_url);
+			}
+		})
+	})	
+});
